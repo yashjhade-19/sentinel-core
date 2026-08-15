@@ -1,7 +1,7 @@
-import Assets from "./pages/Assets";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
-    return <Assets />;
+  return <Dashboard />;
 }
 
 export default App;

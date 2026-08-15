@@ -1,0 +1,150 @@
+.asset-table-card {
+  width: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.asset-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.asset-table thead {
+  background: #f8fafc;
+}
+
+.asset-table th {
+  height: 46px;
+  padding: 0 18px;
+  text-align: left;
+  white-space: nowrap;
+
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.asset-table td {
+  height: 58px;
+  padding: 0 18px;
+  white-space: nowrap;
+
+  color: #475569;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.asset-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.asset-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.asset-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Asset name */
+
+.asset-name {
+  color: #172033 !important;
+  font-weight: 600;
+}
+
+/* IP */
+
+.ip-address {
+  color: #475569 !important;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 12px;
+}
+
+/* Status */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 5px 9px;
+  border-radius: 6px;
+
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Online */
+
+.status-badge.online,
+.status-badge.active {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.status-badge.online .status-dot,
+.status-badge.active .status-dot {
+  background: #10b981;
+}
+
+/* Warning */
+
+.status-badge.warning {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.status-badge.warning .status-dot {
+  background: #f59e0b;
+}
+
+/* Critical */
+
+.status-badge.critical {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.status-badge.critical .status-dot {
+  background: #ef4444;
+}
+
+/* Offline */
+
+.status-badge.offline {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.status-badge.offline .status-dot {
+  background: #64748b;
+}
+
+/* Empty */
+
+.empty-state {
+  height: 180px !important;
+  text-align: center !important;
+  color: #94a3b8 !important;
+  font-size: 14px;
+}
