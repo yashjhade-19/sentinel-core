@@ -13,3 +13,7 @@ export const getAssetById = (id) => {
 export const createAsset = (asset) => {
     return axios.post(API_BASE, asset);
 };
+
+export const getDashboardSummary = () => {
+    return axios.get(`${API_BASE}/dashboard/summary`);
+};

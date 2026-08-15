@@ -1,89 +1,84 @@
-import "./AssetTable.css";
+function AssetTable({ assets }) {
+    return (
+        <div className="table-wrapper">
+            <table className="asset-table">
 
-function AssetTable({ assets = [] }) {
-  return (
-    <div className="asset-table-card">
-      <div className="table-wrapper">
-        <table className="asset-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>IP Address</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>CPU</th>
+                        <th>Memory</th>
+                        <th>Network</th>
+                    </tr>
+                </thead>
 
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>IP Address</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>CPU</th>
-              <th>Memory</th>
-              <th>Network</th>
-            </tr>
-          </thead>
+                <tbody>
 
-          <tbody>
-            {assets.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="empty-state">
-                  No assets found
-                </td>
-              </tr>
-            ) : (
-              assets.map((asset) => (
-                <tr key={asset.id}>
+                    {assets.length === 0 ? (
 
-                  <td className="asset-name">
-                    {asset.assetName}
-                  </td>
+                        <tr>
+                            <td colSpan="8" className="empty-state">
+                                No assets found
+                            </td>
+                        </tr>
 
-                  <td>
-                    {asset.assetType}
-                  </td>
+                    ) : (
 
-                  <td className="ip-address">
-                    {asset.ipAddress}
-                  </td>
+                        assets.map((asset) => (
 
-                  <td>
-                    {asset.location || "-"}
-                  </td>
+                            <tr key={asset.id}>
 
-                  <td>
-                    <span
-                      className={`status-badge ${String(
-                        asset.status || ""
-                      ).toLowerCase()}`}
-                    >
-                      <span className="status-dot"></span>
-                      {asset.status}
-                    </span>
-                  </td>
+                                <td className="asset-name">
+                                    {asset.assetName}
+                                </td>
 
-                  <td>
-                    {asset.cpuUsage != null
-                      ? `${asset.cpuUsage}%`
-                      : "-"}
-                  </td>
+                                <td>
+                                    {asset.assetType}
+                                </td>
 
-                  <td>
-                    {asset.memoryUsage != null
-                      ? `${asset.memoryUsage}%`
-                      : "-"}
-                  </td>
+                                <td className="ip-address">
+                                    {asset.ipAddress}
+                                </td>
 
-                  <td>
-                    {asset.networkUsage != null
-                      ? `${asset.networkUsage}%`
-                      : "-"}
-                  </td>
+                                <td>
+                                    {asset.location}
+                                </td>
 
-                </tr>
-              ))
-            )}
-          </tbody>
+                                <td>
+                                    <span
+                                        className={`status-badge ${asset.status?.toLowerCase()}`}
+                                    >
+                                        {asset.status}
+                                    </span>
+                                </td>
 
-        </table>
-      </div>
-    </div>
-  );
+                                <td>
+                                    {asset.cpuUsage}%
+                                </td>
+
+                                <td>
+                                    {asset.memoryUsage}%
+                                </td>
+
+                                <td>
+                                    {asset.networkUsage}%
+                                </td>
+
+                            </tr>
+
+                        ))
+
+                    )}
+
+                </tbody>
+
+            </table>
+        </div>
+    );
 }
 
 export default AssetTable;
