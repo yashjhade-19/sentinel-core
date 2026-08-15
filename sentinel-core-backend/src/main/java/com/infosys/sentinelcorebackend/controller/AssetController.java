@@ -1,6 +1,7 @@
 package com.infosys.sentinelcorebackend.controller;
 
 import com.infosys.sentinelcorebackend.dto.AssetDTO;
+import com.infosys.sentinelcorebackend.dto.DashboardSummaryDTO;
 import com.infosys.sentinelcorebackend.service.AssetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,5 +28,10 @@ public class AssetController {
     @GetMapping("/{id}")
     public AssetDTO findAssetById(@PathVariable Long id) {
         return assetService.getAssetById(id);
+    }
+
+    @GetMapping("/dashboard/summary")
+    public DashboardSummaryDTO getDashboardSummary() {
+        return assetService.getDashboardSummary();
     }
 }

@@ -2,13 +2,27 @@ package com.infosys.sentinelcorebackend.repository;
 
 import com.infosys.sentinelcorebackend.entity.Asset;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
-
-@Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-//    List<Asset> findByStatus(Asset.AssetStatus status);
-//    List<Asset> findByAssetType(String assetType);
+    @Query("SELECT AVG(a.cpuUsage) FROM Asset a")
+    Double findAverageCpuUsage();
+
+    @Query("SELECT AVG(a.memoryUsage) FROM Asset a")
+    Double findAverageMemoryUsage();
+
+    @Query("""
+           SELECT COUNT(a)
+           FROM Asset a
+           WHERE a.status = 'CRITICAL'
+           """)
+    Long countCriticalAssets();
+
+    @Query("""
+           SELECT COUNT(a)
+           FROM Asset a
+           WHERE a.status = 'ONLINE'
+           """)
+    Long countOnlineAssets();
 }
