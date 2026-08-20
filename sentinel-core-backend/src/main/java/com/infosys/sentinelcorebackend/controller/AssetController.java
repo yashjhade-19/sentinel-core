@@ -4,6 +4,7 @@ import com.infosys.sentinelcorebackend.dto.AssetDTO;
 import com.infosys.sentinelcorebackend.dto.DashboardSummaryDTO;
 import com.infosys.sentinelcorebackend.service.AssetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ public class AssetController {
 
     private final AssetService assetService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public AssetDTO createAsset(@RequestBody AssetDTO assetDTO) {
         return assetService.saveAsset(assetDTO);

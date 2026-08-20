@@ -5,9 +5,13 @@ import {
     getDashboardSummary,
     createAsset
 } from "../api/assetApi";
+
+import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 
 function Dashboard() {
+
+    const { isAdmin } = useAuth();
 
     const [assets, setAssets] = useState([]);
     const [summary, setSummary] = useState(null);
@@ -135,13 +139,15 @@ function Dashboard() {
                         </p>
                     </div>
 
-                    <button
-                        className="add-asset-button"
-                        onClick={() => setShowForm(true)}
-                    >
-                        <span>+</span>
-                        Add Asset
-                    </button>
+                    {isAdmin && (
+                        <button
+                            className="add-asset-button"
+                            onClick={() => setShowForm(true)}
+                        >
+                            <span>+</span>
+                            Add Asset
+                        </button>
+                    )}
 
                 </header>
 
@@ -214,7 +220,7 @@ function Dashboard() {
 
             {/* Add Asset Modal */}
 
-            {showForm && (
+          {showForm && isAdmin && (
 
                 <div
                     className="modal-overlay"
