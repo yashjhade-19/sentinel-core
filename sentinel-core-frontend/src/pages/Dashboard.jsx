@@ -1,415 +1,126 @@
-import { useEffect, useState } from "react";
-import AssetTable from "../components/AssetTable";
-import {
-    getAllAssets,
-    getDashboardSummary,
-    createAsset
-} from "../api/assetApi";
-
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getDashboardSummary, getAllAssets } from "../api/assetApi";
+import { getOpenAlerts } from "../api/alertApi";
 import { useAuth } from "../context/AuthContext";
 import "./Dashboard.css";
 
+const number = (value, digits = 1) => Number(value ?? 0).toFixed(digits);
+
 function Dashboard() {
-
     const { isAdmin } = useAuth();
-
-    const [assets, setAssets] = useState([]);
     const [summary, setSummary] = useState(null);
+    const [assets, setAssets] = useState([]);
+    const [alerts, setAlerts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const [showForm, setShowForm] = useState(false);
-
-    const [formData, setFormData] = useState({
-        assetName: "",
-        assetType: "",
-        ipAddress: "",
-        location: "",
-        status: "ONLINE",
-        cpuUsage: "",
-        memoryUsage: "",
-        networkUsage: ""
-    });
-
-    const loadDashboard = async () => {
+    const loadDashboard = useCallback(async () => {
+        setError("");
         try {
-            const [assetsResponse, summaryResponse] =
-                await Promise.all([
-                    getAllAssets(),
-                    getDashboardSummary()
-                ]);
-
-            setAssets(assetsResponse.data);
-            setSummary(summaryResponse.data);
-
-        } catch (error) {
-            console.error("Error loading dashboard:", error);
+            const [summaryRes, assetsRes, alertsRes] = await Promise.all([
+                getDashboardSummary(),
+                getAllAssets(),
+                getOpenAlerts()
+            ]);
+            setSummary(summaryRes.data);
+            setAssets(Array.isArray(assetsRes.data) ? assetsRes.data : []);
+            setAlerts(Array.isArray(alertsRes.data) ? alertsRes.data : []);
+        } catch (err) {
+            console.error("Dashboard load failed:", err);
+            setError("Unable to load dashboard data. Please refresh.");
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        loadDashboard();
     }, []);
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
+    useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
-        setFormData((previous) => ({
-            ...previous,
-            [name]: value
-        }));
-    };
+    if (loading) return <div className="page-loading">Loading dashboard...</div>;
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-
-        try {
-
-            await createAsset({
-                ...formData,
-                cpuUsage: Number(formData.cpuUsage),
-                memoryUsage: Number(formData.memoryUsage),
-                networkUsage: Number(formData.networkUsage)
-            });
-
-            setFormData({
-                assetName: "",
-                assetType: "",
-                ipAddress: "",
-                location: "",
-                status: "ONLINE",
-                cpuUsage: "",
-                memoryUsage: "",
-                networkUsage: ""
-            });
-
-            setShowForm(false);
-
-            await loadDashboard();
-
-        } catch (error) {
-            console.error("Error creating asset:", error);
-            alert("Failed to create asset");
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="dashboard-loading">
-                Loading dashboard...
-            </div>
-        );
-    }
+    const visibleAssets = assets.slice(0, 5);
+    const visibleAlerts = alerts.slice(0, 4);
 
     return (
-        <div className="dashboard-layout">
-
-            {/* Sidebar */}
-
-            <aside className="sidebar">
-
-                <div className="sidebar-logo">
-                    <div className="logo-icon">S</div>
-                    <span>SentinelCore</span>
+        <div className="dashboard-page">
+            <div className="page-heading-row">
+                <div>
+                    <div className="eyebrow">OVERVIEW</div>
+                    <h1>Security Dashboard</h1>
+                    <p>Monitor infrastructure health, asset availability and security alerts.</p>
                 </div>
+                <button className="secondary-button" onClick={loadDashboard}>↻ Refresh</button>
+            </div>
 
-                <nav className="sidebar-nav">
+            {error && <div className="error-banner">{error}</div>}
 
-                    <div className="nav-item active">
-                        <span className="nav-icon">▦</span>
-                        <span>Dashboard</span>
+            <section className="summary-grid">
+                <div className="summary-card"><span>Total Assets</span><strong>{summary?.totalAssets ?? 0}</strong><small>Registered infrastructure</small></div>
+                <div className="summary-card"><span>Online Assets</span><strong>{summary?.onlineAssets ?? 0}</strong><small>Currently operational</small></div>
+                <div className="summary-card"><span>Offline Assets</span><strong>{summary?.offlineAssets ?? 0}</strong><small>Currently unavailable</small></div>
+                <div className="summary-card critical"><span>Critical Alerts</span><strong>{summary?.criticalAlerts ?? 0}</strong><small>Require attention</small></div>
+            </section>
+
+            <section className="health-card">
+                <div className="section-title-row">
+                    <div><h2>System Health</h2><p>Current infrastructure performance</p></div>
+                    <span className="live-badge">LIVE</span>
+                </div>
+                <div className="health-grid">
+                    <HealthMetric label="System Uptime" value={number(summary?.uptimePercentage)} note="Asset availability" />
+                    <HealthMetric label="Average CPU" value={number(summary?.avgCpuUsage)} note="Across monitored assets" />
+                    <HealthMetric label="Average Memory" value={number(summary?.avgMemoryUsage)} note="Across monitored assets" />
+                </div>
+            </section>
+
+            <div className="dashboard-lower-grid">
+                <section className="panel">
+                    <div className="section-title-row">
+                        <div><h2>Recent Assets</h2><p>Latest monitored infrastructure</p></div>
+                        <Link to="/assets" className="view-link">View all →</Link>
                     </div>
-
-                </nav>
-
-            </aside>
-
-
-            {/* Main */}
-
-            <main className="dashboard-main">
-
-                <header className="dashboard-header">
-
-                    <div>
-                        <h1>Dashboard</h1>
-                        <p>
-                            Monitor and manage infrastructure assets.
-                        </p>
+                    <div className="mini-table">
+                        <div className="mini-row mini-head"><span>ASSET</span><span>STATUS</span><span>CPU</span><span>MEMORY</span></div>
+                        {visibleAssets.length === 0 ? <div className="empty-row">No assets found.</div> : visibleAssets.map(asset => (
+                            <div className="mini-row" key={asset.id}>
+                                <div><strong>{asset.assetName}</strong><small>{asset.assetType}</small></div>
+                                <StatusBadge status={asset.status} />
+                                <span>{number(asset.cpuUsage)}%</span>
+                                <span>{number(asset.memoryUsage)}%</span>
+                            </div>
+                        ))}
                     </div>
-
-                    {isAdmin && (
-                        <button
-                            className="add-asset-button"
-                            onClick={() => setShowForm(true)}
-                        >
-                            <span>+</span>
-                            Add Asset
-                        </button>
-                    )}
-
-                </header>
-
-
-                {/* Summary */}
-
-                {summary && (
-                    <section className="summary-grid">
-
-                        <div className="summary-card">
-                            <span>Total Assets</span>
-                            <strong>
-                                {summary.totalAssets}
-                            </strong>
-                        </div>
-
-                        <div className="summary-card">
-                            <span>Uptime</span>
-                            <strong>
-                                {summary.uptimePercentage.toFixed(2)}%
-                            </strong>
-                        </div>
-
-                        <div className="summary-card">
-                            <span>Avg CPU Usage</span>
-                            <strong>
-                                {summary.avgCpuUsage.toFixed(1)}%
-                            </strong>
-                        </div>
-
-                        <div className="summary-card">
-                            <span>Avg Memory Usage</span>
-                            <strong>
-                                {summary.avgMemoryUsage.toFixed(1)}%
-                            </strong>
-                        </div>
-
-                        <div className="summary-card">
-                            <span>Critical Alerts</span>
-                            <strong className="critical-number">
-                                {summary.criticalAlerts}
-                            </strong>
-                        </div>
-
-                    </section>
-                )}
-
-
-                {/* Assets */}
-
-                <section className="assets-section">
-
-                    <div className="section-header">
-
-                        <div>
-                            <h2>Assets</h2>
-                            <span>
-                                {assets.length} assets
-                            </span>
-                        </div>
-
-                    </div>
-
-                    <AssetTable assets={assets} />
-
                 </section>
 
-            </main>
-
-
-            {/* Add Asset Modal */}
-
-          {showForm && isAdmin && (
-
-                <div
-                    className="modal-overlay"
-                    onClick={() => setShowForm(false)}
-                >
-
-                    <div
-                        className="asset-modal"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-
-                        <div className="modal-header">
-
-                            <div>
-                                <h2>Add Asset</h2>
-                                <p>
-                                    Enter the asset details below.
-                                </p>
-                            </div>
-
-                            <button
-                                className="modal-close"
-                                onClick={() => setShowForm(false)}
-                            >
-                                ×
-                            </button>
-
-                        </div>
-
-
-                        <form onSubmit={handleSubmit}>
-
-                            <div className="form-grid">
-
-                                <div className="form-group">
-                                    <label>Asset Name</label>
-                                    <input
-                                        type="text"
-                                        name="assetName"
-                                        value={formData.assetName}
-                                        onChange={handleChange}
-                                        placeholder="e.g. WebServer-01"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>Asset Type</label>
-                                    <input
-                                        type="text"
-                                        name="assetType"
-                                        value={formData.assetType}
-                                        onChange={handleChange}
-                                        placeholder="e.g. Server"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>IP Address</label>
-                                    <input
-                                        type="text"
-                                        name="ipAddress"
-                                        value={formData.ipAddress}
-                                        onChange={handleChange}
-                                        placeholder="192.168.1.10"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>Location</label>
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        placeholder="Indore"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>Status</label>
-
-                                    <select
-                                        name="status"
-                                        value={formData.status}
-                                        onChange={handleChange}
-                                    >
-                                        <option value="ONLINE">
-                                            ONLINE
-                                        </option>
-
-                                        <option value="WARNING">
-                                            WARNING
-                                        </option>
-
-                                        <option value="CRITICAL">
-                                            CRITICAL
-                                        </option>
-                                    </select>
-
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>CPU Usage (%)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        max="100"
-                                        name="cpuUsage"
-                                        value={formData.cpuUsage}
-                                        onChange={handleChange}
-                                        placeholder="45.2"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>Memory Usage (%)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        max="100"
-                                        name="memoryUsage"
-                                        value={formData.memoryUsage}
-                                        onChange={handleChange}
-                                        placeholder="60.1"
-                                        required
-                                    />
-                                </div>
-
-
-                                <div className="form-group">
-                                    <label>Network Usage (%)</label>
-                                    <input
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        max="100"
-                                        name="networkUsage"
-                                        value={formData.networkUsage}
-                                        onChange={handleChange}
-                                        placeholder="30.2"
-                                        required
-                                    />
-                                </div>
-
-                            </div>
-
-
-                            <div className="modal-actions">
-
-                                <button
-                                    type="button"
-                                    className="cancel-button"
-                                    onClick={() => setShowForm(false)}
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="save-button"
-                                >
-                                    Add Asset
-                                </button>
-
-                            </div>
-
-                        </form>
-
+                <section className="panel">
+                    <div className="section-title-row">
+                        <div><h2>Open Alerts</h2><p>Security events requiring attention</p></div>
+                        <Link to="/alerts" className="view-link">View all →</Link>
                     </div>
+                    <div className="alert-list">
+                        {visibleAlerts.length === 0 ? <div className="empty-row">No open alerts.</div> : visibleAlerts.map(alert => (
+                            <div className="alert-item" key={alert.id}>
+                                <span className={`severity ${alert.severity?.toLowerCase()}`}>{alert.severity}</span>
+                                <div><strong>{alert.assetName}</strong><small>{alert.message}</small></div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </div>
 
-                </div>
-
-            )}
-
+            {isAdmin && <div className="dashboard-note">Administrator access enabled — asset management is available from the Assets section.</div>}
         </div>
     );
+}
+
+function HealthMetric({ label, value, note }) {
+    const percentage = Math.max(0, Math.min(100, Number(value)));
+    return <div className="health-metric"><div className="metric-top"><span>{label}</span><strong>{value}%</strong></div><div className="progress"><span style={{ width: `${percentage}%` }} /></div><small>{note}</small></div>;
+}
+
+function StatusBadge({ status }) {
+    const value = status || "UNKNOWN";
+    return <span className={`status-badge ${value.toLowerCase()}`}><i />{value}</span>;
 }
 
 export default Dashboard;

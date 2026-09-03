@@ -1,89 +1,89 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { setTokens } from "../api/axiosConfig";
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
+function readRoles(token) {
+    if (!token) return [];
 
+    try {
+        const decoded = jwtDecode(token);
+        return Array.isArray(decoded.roles) ? decoded.roles : [];
+    } catch {
+        return [];
+    }
+}
+
+export function AuthProvider({ children }) {
     const [accessToken, setAccessToken] = useState(
         () => localStorage.getItem("accessToken")
     );
-
     const [refreshToken, setRefreshToken] = useState(
         () => localStorage.getItem("refreshToken")
     );
+    const [roles, setRoles] = useState(
+        () => readRoles(localStorage.getItem("accessToken"))
+    );
 
-    const [roles, setRoles] = useState(() => {
-        const token = localStorage.getItem("accessToken");
-
-        if (!token) return [];
-
-        try {
-            const decoded = jwtDecode(token);
-            return decoded.roles || [];
-        } catch {
-            return [];
-        }
-    });
-
-    // Restore tokens into axios when app starts
-    if (accessToken || refreshToken) {
+    useEffect(() => {
         setTokens(accessToken, refreshToken);
-    }
+    }, [accessToken, refreshToken]);
+
+    useEffect(() => {
+        const handleLogout = () => {
+            setAccessToken(null);
+            setRefreshToken(null);
+            setRoles([]);
+        };
+
+        window.addEventListener("auth:logout", handleLogout);
+        return () => window.removeEventListener("auth:logout", handleLogout);
+    }, []);
 
     const loginUser = (access, refresh) => {
-
         localStorage.setItem("accessToken", access);
         localStorage.setItem("refreshToken", refresh);
-
+        try {
+            localStorage.setItem("username", jwtDecode(access).sub || "");
+        } catch {
+            localStorage.removeItem("username");
+        }
         setAccessToken(access);
         setRefreshToken(refresh);
-
+        setRoles(readRoles(access));
         setTokens(access, refresh);
-
-        const decoded = jwtDecode(access);
-        setRoles(decoded.roles || []);
     };
 
     const updateAccessToken = (newAccessToken) => {
-
         localStorage.setItem("accessToken", newAccessToken);
-
         setAccessToken(newAccessToken);
-
+        setRoles(readRoles(newAccessToken));
         setTokens(newAccessToken, refreshToken);
-
-        const decoded = jwtDecode(newAccessToken);
-        setRoles(decoded.roles || []);
     };
 
     const logout = () => {
-
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-
+        localStorage.removeItem("username");
         setAccessToken(null);
         setRefreshToken(null);
         setRoles([]);
-
         setTokens(null, null);
     };
 
-    const isAdmin = roles.includes("ROLE_ADMIN");
+    const value = useMemo(() => ({
+        accessToken,
+        refreshToken,
+        roles,
+        isAdmin: roles.includes("ROLE_ADMIN"),
+        loginUser,
+        updateAccessToken,
+        logout
+    }), [accessToken, refreshToken, roles]);
 
     return (
-        <AuthContext.Provider
-            value={{
-                accessToken,
-                refreshToken,
-                roles,
-                isAdmin,
-                loginUser,
-                updateAccessToken,
-                logout
-            }}
-        >
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,49 +1,55 @@
-import { useState } from "react";
-import Dashboard from "./pages/Dashboard";
-import Login from "./components/Login";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { setTokens } from "./api/axiosConfig";
+import Login from "./components/Login";
+import AppLayout from "./components/AppLayout";
+import Dashboard from "./pages/Dashboard";
+import Assets from "./pages/Assets";
+import Alerts from "./pages/Alerts";
 
-function AppContent() {
+function ProtectedRoutes() {
+    const { accessToken } = useAuth();
 
-    const { accessToken, loginUser, logout } = useAuth();
-    const [isLoggedIn, setIsLoggedIn] = useState(!!accessToken);
-
-    const handleLoginSuccess = (accessToken, refreshToken) => {
-
-        loginUser(accessToken, refreshToken);
-
-        setTokens(accessToken, refreshToken);
-
-        setIsLoggedIn(true);
-    };
-
-    const handleLogout = () => {
-
-        logout();
-
-        setTokens(null, null);
-
-        setIsLoggedIn(false);
-    };
-
-    if (!isLoggedIn) {
-        return (
-            <Login onLoginSuccess={handleLoginSuccess} />
-        );
+    if (!accessToken) {
+        return <Navigate to="/login" replace />;
     }
 
     return (
-        <Dashboard onLogout={handleLogout} />
+        <AppLayout>
+            <Routes>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/assets" element={<Assets />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+        </AppLayout>
+    );
+}
+
+function AppRoutes() {
+    const { accessToken } = useAuth();
+
+    return (
+        <Routes>
+            <Route
+                path="/login"
+                element={
+                    accessToken
+                        ? <Navigate to="/dashboard" replace />
+                        : <Login />
+                }
+            />
+            <Route path="/*" element={<ProtectedRoutes />} />
+        </Routes>
     );
 }
 
 function App() {
-
     return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
+        <BrowserRouter>
+            <AuthProvider>
+                <AppRoutes />
+            </AuthProvider>
+        </BrowserRouter>
     );
 }
 

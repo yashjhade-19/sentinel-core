@@ -1,0 +1,113 @@
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    background: #080d1a;
+    color: #e5edf9;
+}
+
+.sidebar {
+    width: 246px;
+    flex: 0 0 246px;
+    min-height: 100vh;
+    background: #0d1527;
+    border-right: 1px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 15px;
+    box-sizing: border-box;
+}
+
+.brand-block {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 9px 26px;
+}
+
+.brand-icon,
+.profile-avatar {
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: white;
+    font-weight: 800;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, .22);
+}
+
+.brand-name { font-size: 16px; font-weight: 750; }
+.brand-caption { margin-top: 3px; color: #71819e; font-size: 11px; }
+
+.sidebar-nav { display: grid; gap: 7px; }
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 48px;
+    padding: 0 15px;
+    border-radius: 10px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: .18s ease;
+}
+
+.sidebar-link:hover { color: #dbeafe; background: #111d35; }
+.sidebar-link.active { color: #60a5fa; background: #162b50; border: 1px solid #244675; }
+.sidebar-icon { width: 18px; text-align: center; font-size: 16px; }
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 18px 10px 2px;
+    border-top: 1px solid #1e293b;
+}
+
+.system-status { display: flex; align-items: center; gap: 8px; color: #6ee7b7; font-size: 12px; font-weight: 600; }
+.sidebar-footer small { display: block; margin-top: 9px; color: #52617b; font-size: 10px; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.online-dot { background: #22c55e; box-shadow: 0 0 9px rgba(34,197,94,.7); }
+
+.app-main { flex: 1; min-width: 0; }
+
+.topbar {
+    height: 64px;
+    border-bottom: 1px solid #1e293b;
+    background: #0b1221;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 27px;
+}
+
+.topbar-title { display: flex; align-items: center; gap: 15px; }
+.topbar-title strong { font-size: 16px; }
+.topbar-title span { color: #52617b; font-size: 12px; border-left: 1px solid #253149; padding-left: 15px; }
+
+.topbar-actions { display: flex; align-items: center; gap: 15px; }
+.operational { display: flex; align-items: center; gap: 8px; color: #6ee7b7; font-size: 12px; font-weight: 600; }
+.topbar-divider { height: 30px; width: 1px; background: #1e293b; }
+.profile-block { display: flex; align-items: center; gap: 10px; }
+.profile-avatar { width: 36px; height: 36px; border-radius: 50%; font-size: 14px; }
+.profile-block strong { display: block; font-size: 12px; }
+.profile-block small { display: block; margin-top: 2px; color: #64748b; font-size: 10px; }
+.logout-button { border: 0; background: transparent; color: #64748b; cursor: pointer; font-size: 18px; padding: 5px; }
+.logout-button:hover { color: #f8fafc; }
+
+.page-content { padding: 31px 34px 42px; min-width: 0; }
+
+@media (max-width: 800px) {
+    .sidebar { width: 76px; flex-basis: 76px; padding: 16px 9px; }
+    .brand-block { justify-content: center; padding: 0 0 24px; }
+    .brand-block > div:last-child, .sidebar-link span:last-child, .sidebar-footer { display: none; }
+    .sidebar-link { justify-content: center; padding: 0; }
+    .topbar { padding: 0 16px; }
+    .topbar-title span, .operational { display: none; }
+    .page-content { padding: 22px 16px; }
+}
