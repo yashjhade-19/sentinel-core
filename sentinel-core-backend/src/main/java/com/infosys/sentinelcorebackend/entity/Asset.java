@@ -32,6 +32,9 @@ public class Asset {
     @Column(nullable = false)
     private String status;
 
+    @Column
+    private String risk;
+
     @Column(name = "cpu_usage")
     private Double cpuUsage;
 

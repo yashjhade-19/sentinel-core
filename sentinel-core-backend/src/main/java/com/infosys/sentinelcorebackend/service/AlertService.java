@@ -18,6 +18,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final AssetRepository assetRepository;
+    private final NotificationService notificationService;
 
     public AlertDTO createAlert(
             Long assetId,
@@ -31,15 +32,32 @@ public class AlertService {
                         )
                 );
 
+        Alert.AlertSeverity alertSeverity =
+                Alert.AlertSeverity.valueOf(severity.toUpperCase());
+
         Alert alert = Alert.builder()
                 .asset(asset)
-                .severity(Alert.AlertSeverity.valueOf(severity))
+                .severity(alertSeverity)
                 .message(message)
                 .status(Alert.AlertStatus.OPEN)
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return toDTO(alertRepository.save(alert));
+        Alert savedAlert = alertRepository.save(alert);
+
+        // Send email only for HIGH and CRITICAL alerts
+        if (alertSeverity == Alert.AlertSeverity.HIGH ||
+                alertSeverity == Alert.AlertSeverity.CRITICAL) {
+
+            notificationService.sendAlertEmail(
+                    "yashjhade10@gmail.com",
+                    asset.getAssetName(),
+                    alertSeverity.name(),
+                    message
+            );
+        }
+
+        return toDTO(savedAlert);
     }
 
     public AlertDTO resolveAlert(Long alertId) {

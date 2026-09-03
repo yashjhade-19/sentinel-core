@@ -10,4 +10,10 @@ import java.util.List;
 public interface AlertRepository extends JpaRepository<Alert, Long> {
 
     List<Alert> findByStatus(Alert.AlertStatus status);
+
+    boolean existsByAssetIdAndSeverityAndStatus(
+            Long assetId,
+            Alert.AlertSeverity severity,
+            Alert.AlertStatus status
+    );
 }

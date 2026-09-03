@@ -1,5 +1,8 @@
 package com.infosys.sentinelcorebackend.controller;
 
+import com.infosys.sentinelcorebackend.entity.User;
+import com.infosys.sentinelcorebackend.repository.UserRepository;
+import com.infosys.sentinelcorebackend.service.AuthService;
 import com.infosys.sentinelcorebackend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +15,8 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 
+    private final AuthService authService;
+    private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
@@ -21,13 +26,65 @@ public class AuthController {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
-        if ("admin".equals(username) && "admin123".equals(password)) {
+        User user = authService.authenticate(username, password);
 
-            String token = jwtUtil.generateToken(username);
+        String role = user.getRoles()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new RuntimeException("User has no assigned role")
+                )
+                .getName();
 
-            return Map.of("token", token);
+        String accessToken = jwtUtil.generateAccessToken(
+                user.getUsername(),
+                role
+        );
+
+        String refreshToken = jwtUtil.generateRefreshToken(
+                user.getUsername()
+        );
+
+        return Map.of(
+                "accessToken", accessToken,
+                "refreshToken", refreshToken
+        );
+    }
+
+    @PostMapping("/refresh")
+    public Map<String, String> refresh(
+            @RequestBody Map<String, String> request) {
+
+        String refreshToken = request.get("refreshToken");
+
+        if (refreshToken == null ||
+                !jwtUtil.isTokenValid(refreshToken)) {
+
+            throw new RuntimeException("Invalid refresh token");
         }
 
-        throw new RuntimeException("Invalid credentials");
+        String username = jwtUtil.extractUsername(refreshToken);
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        String role = user.getRoles()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new RuntimeException("User has no assigned role")
+                )
+                .getName();
+
+        String newAccessToken = jwtUtil.generateAccessToken(
+                user.getUsername(),
+                role
+        );
+
+        return Map.of(
+                "accessToken", newAccessToken
+        );
     }
 }

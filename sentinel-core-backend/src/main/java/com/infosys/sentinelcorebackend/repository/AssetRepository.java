@@ -2,9 +2,12 @@ package com.infosys.sentinelcorebackend.repository;
 
 import com.infosys.sentinelcorebackend.entity.Asset;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
-public interface AssetRepository extends JpaRepository<Asset, Long> {
+public interface AssetRepository
+        extends JpaRepository<Asset, Long>,
+        JpaSpecificationExecutor<Asset> {
 
     @Query("SELECT AVG(a.cpuUsage) FROM Asset a")
     Double findAverageCpuUsage();
