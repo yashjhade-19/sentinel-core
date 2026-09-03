@@ -10,6 +10,10 @@ public class DashboardSummaryDTO {
 
     private Long totalAssets;
 
+    private Long onlineAssets;
+
+    private Long offlineAssets;
+
     private Double uptimePercentage;
 
     private Double avgCpuUsage;

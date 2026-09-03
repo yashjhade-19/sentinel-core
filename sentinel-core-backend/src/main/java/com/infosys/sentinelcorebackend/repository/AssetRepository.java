@@ -5,9 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
-public interface AssetRepository
-        extends JpaRepository<Asset, Long>,
-        JpaSpecificationExecutor<Asset> {
+public interface AssetRepository extends JpaRepository<Asset, Long>, JpaSpecificationExecutor<Asset> {
 
     @Query("SELECT AVG(a.cpuUsage) FROM Asset a")
     Double findAverageCpuUsage();
@@ -15,17 +13,9 @@ public interface AssetRepository
     @Query("SELECT AVG(a.memoryUsage) FROM Asset a")
     Double findAverageMemoryUsage();
 
-    @Query("""
-           SELECT COUNT(a)
-           FROM Asset a
-           WHERE a.status = 'CRITICAL'
-           """)
-    Long countCriticalAssets();
-
-    @Query("""
-           SELECT COUNT(a)
-           FROM Asset a
-           WHERE a.status = 'ONLINE'
-           """)
+    @Query("SELECT COUNT(a) FROM Asset a WHERE a.status = 'ONLINE'")
     Long countOnlineAssets();
+
+    @Query("SELECT COUNT(a) FROM Asset a WHERE a.status = 'OFFLINE'")
+    Long countOfflineAssets();
 }

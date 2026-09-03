@@ -33,7 +33,35 @@ public class AlertService {
                 );
 
         Alert.AlertSeverity alertSeverity =
-                Alert.AlertSeverity.valueOf(severity.toUpperCase());
+                Alert.AlertSeverity.valueOf(severity);
+
+        /*
+         * Prevent duplicate OPEN alerts.
+         *
+         * HealthMonitorService runs periodically. If the same
+         * condition is still active, we keep the existing alert
+         * instead of creating another one every minute.
+         */
+        boolean alreadyOpen =
+                alertRepository.existsByAssetIdAndSeverityAndStatus(
+                        assetId,
+                        alertSeverity,
+                        Alert.AlertStatus.OPEN
+                );
+
+        if (alreadyOpen) {
+
+            return alertRepository
+                    .findByStatus(Alert.AlertStatus.OPEN)
+                    .stream()
+                    .filter(alert ->
+                            alert.getAsset().getId().equals(assetId)
+                                    && alert.getSeverity() == alertSeverity
+                    )
+                    .findFirst()
+                    .map(this::toDTO)
+                    .orElseThrow();
+        }
 
         Alert alert = Alert.builder()
                 .asset(asset)
@@ -45,12 +73,13 @@ public class AlertService {
 
         Alert savedAlert = alertRepository.save(alert);
 
-        // Send email only for HIGH and CRITICAL alerts
+        /*
+         * Send notification only for HIGH and CRITICAL alerts.
+         */
         if (alertSeverity == Alert.AlertSeverity.HIGH ||
                 alertSeverity == Alert.AlertSeverity.CRITICAL) {
 
             notificationService.sendAlertEmail(
-                    "yashjhade10@gmail.com",
                     asset.getAssetName(),
                     alertSeverity.name(),
                     message

@@ -12,7 +12,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class AuthController {
 
     private final AuthService authService;
@@ -20,9 +20,7 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public Map<String, String> login(
-            @RequestBody Map<String, String> credentials) {
-
+    public Map<String, String> login(@RequestBody Map<String, String> credentials) {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
@@ -31,60 +29,42 @@ public class AuthController {
         String role = user.getRoles()
                 .stream()
                 .findFirst()
-                .orElseThrow(() ->
-                        new RuntimeException("User has no assigned role")
-                )
+                .orElseThrow(() -> new RuntimeException("User has no assigned role"))
                 .getName();
 
-        String accessToken = jwtUtil.generateAccessToken(
-                user.getUsername(),
-                role
-        );
-
-        String refreshToken = jwtUtil.generateRefreshToken(
-                user.getUsername()
-        );
-
         return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
+                "accessToken", jwtUtil.generateAccessToken(user.getUsername(), role),
+                "refreshToken", jwtUtil.generateRefreshToken(user.getUsername())
         );
     }
 
     @PostMapping("/refresh")
-    public Map<String, String> refresh(
-            @RequestBody Map<String, String> request) {
-
+    public Map<String, String> refresh(@RequestBody Map<String, String> request) {
         String refreshToken = request.get("refreshToken");
 
-        if (refreshToken == null ||
-                !jwtUtil.isTokenValid(refreshToken)) {
-
+        if (refreshToken == null
+                || !jwtUtil.isTokenValid(refreshToken)
+                || !jwtUtil.isRefreshToken(refreshToken)) {
             throw new RuntimeException("Invalid refresh token");
         }
 
         String username = jwtUtil.extractUsername(refreshToken);
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new RuntimeException("User not found")
-                );
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("User account is disabled");
+        }
 
         String role = user.getRoles()
                 .stream()
                 .findFirst()
-                .orElseThrow(() ->
-                        new RuntimeException("User has no assigned role")
-                )
+                .orElseThrow(() -> new RuntimeException("User has no assigned role"))
                 .getName();
 
-        String newAccessToken = jwtUtil.generateAccessToken(
-                user.getUsername(),
-                role
-        );
-
         return Map.of(
-                "accessToken", newAccessToken
+                "accessToken", jwtUtil.generateAccessToken(user.getUsername(), role)
         );
     }
 }

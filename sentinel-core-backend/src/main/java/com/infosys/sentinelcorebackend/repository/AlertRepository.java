@@ -16,4 +16,9 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
             Alert.AlertSeverity severity,
             Alert.AlertStatus status
     );
+
+    long countBySeverityAndStatus(
+            Alert.AlertSeverity severity,
+            Alert.AlertStatus status
+    );
 }

@@ -32,7 +32,7 @@ public class Asset {
     @Column(nullable = false)
     private String status;
 
-    @Column
+    @Column(length = 20)
     private String risk;
 
     @Column(name = "cpu_usage")
@@ -40,6 +40,9 @@ public class Asset {
 
     @Column(name = "memory_usage")
     private Double memoryUsage;
+
+    @Column(name = "disk_usage")
+    private Double diskUsage;
 
     @Column(name = "network_usage")
     private Double networkUsage;
