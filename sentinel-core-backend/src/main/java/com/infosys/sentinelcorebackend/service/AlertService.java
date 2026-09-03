@@ -39,8 +39,8 @@ public class AlertService {
          * Prevent duplicate OPEN alerts.
          *
          * HealthMonitorService runs periodically. If the same
-         * condition is still active, we keep the existing alert
-         * instead of creating another one every minute.
+         * condition is still active, the existing alert is returned
+         * instead of creating another alert and sending notifications.
          */
         boolean alreadyOpen =
                 alertRepository.existsByAssetIdAndSeverityAndStatus(
@@ -74,12 +74,13 @@ public class AlertService {
         Alert savedAlert = alertRepository.save(alert);
 
         /*
-         * Send notification only for HIGH and CRITICAL alerts.
+         * Send both email and SMS notifications
+         * for HIGH and CRITICAL alerts.
          */
         if (alertSeverity == Alert.AlertSeverity.HIGH ||
                 alertSeverity == Alert.AlertSeverity.CRITICAL) {
 
-            notificationService.sendAlertEmail(
+            notificationService.sendAlertNotifications(
                     asset.getAssetName(),
                     alertSeverity.name(),
                     message
