@@ -5,12 +5,32 @@ const api = axios.create({
     baseURL: "http://localhost:8080/api",
 });
 
-let currentAccessToken = null;
-let currentRefreshToken = null;
+let currentAccessToken =
+    localStorage.getItem("accessToken");
+
+let currentRefreshToken =
+    localStorage.getItem("refreshToken");
 
 export const setTokens = (access, refresh) => {
+
     currentAccessToken = access;
     currentRefreshToken = refresh;
+
+    if (access) {
+        localStorage.setItem("accessToken", access);
+    }
+
+    if (refresh) {
+        localStorage.setItem("refreshToken", refresh);
+    }
+
+    if (!access) {
+        localStorage.removeItem("accessToken");
+    }
+
+    if (!refresh) {
+        localStorage.removeItem("refreshToken");
+    }
 };
 
 api.interceptors.request.use(
@@ -35,7 +55,8 @@ api.interceptors.response.use(
 
         if (
             error.response?.status === 401 &&
-            !originalRequest._retry
+            !originalRequest._retry &&
+            currentRefreshToken
         ) {
 
             originalRequest._retry = true;
@@ -43,17 +64,32 @@ api.interceptors.response.use(
             try {
 
                 const response =
-                    await refreshAccessToken(currentRefreshToken);
+                    await refreshAccessToken(
+                        currentRefreshToken
+                    );
 
-                currentAccessToken =
+                const newAccessToken =
                     response.data.accessToken;
 
+                currentAccessToken = newAccessToken;
+
+                localStorage.setItem(
+                    "accessToken",
+                    newAccessToken
+                );
+
                 originalRequest.headers.Authorization =
-                    `Bearer ${currentAccessToken}`;
+                    `Bearer ${newAccessToken}`;
 
                 return api(originalRequest);
 
             } catch (refreshError) {
+
+                currentAccessToken = null;
+                currentRefreshToken = null;
+
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
 
                 window.location.reload();
             }

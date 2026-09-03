@@ -1,0 +1,241 @@
+/* ================================
+   Login Page
+================================ */
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(59, 130, 246, 0.18),
+            transparent 35%
+        ),
+        radial-gradient(
+            circle at bottom right,
+            rgba(99, 102, 241, 0.16),
+            transparent 35%
+        ),
+        #0b1120;
+}
+
+
+/* ================================
+   Login Card
+================================ */
+
+.login-card {
+    width: 100%;
+    max-width: 430px;
+
+    padding: 42px;
+
+    background: rgba(17, 24, 39, 0.88);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 20px;
+
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.02);
+
+    backdrop-filter: blur(18px);
+
+    color: #f8fafc;
+}
+
+
+/* ================================
+   Branding
+================================ */
+
+.login-card h1 {
+    margin: 0;
+
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+
+    text-align: center;
+}
+
+.login-subtitle {
+    margin: 8px 0 32px;
+
+    color: #94a3b8;
+
+    font-size: 14px;
+    line-height: 1.5;
+
+    text-align: center;
+}
+
+
+/* ================================
+   Login Heading
+================================ */
+
+.login-card h2 {
+    margin: 0 0 24px;
+
+    font-size: 22px;
+    font-weight: 600;
+
+    color: #e2e8f0;
+}
+
+
+/* ================================
+   Error
+================================ */
+
+.login-error {
+    margin-bottom: 18px;
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    background: rgba(239, 68, 68, 0.10);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+
+    color: #fca5a5;
+
+    font-size: 14px;
+}
+
+
+/* ================================
+   Form
+================================ */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #cbd5e1;
+
+    font-size: 14px;
+    font-weight: 500;
+}
+
+
+/* ================================
+   Inputs
+================================ */
+
+.form-group input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 13px 14px;
+
+    border: 1px solid #334155;
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #0f172a;
+    color: #f8fafc;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #64748b;
+}
+
+.form-group input:hover {
+    border-color: #475569;
+}
+
+.form-group input:focus {
+    border-color: #3b82f6;
+
+    background: #111827;
+
+    box-shadow:
+        0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+
+/* ================================
+   Login Button
+================================ */
+
+.login-button {
+    width: 100%;
+
+    margin-top: 8px;
+    padding: 13px 16px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #4f46e5
+    );
+
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.login-button:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 10px 25px rgba(37, 99, 235, 0.30);
+}
+
+.login-button:active {
+    transform: translateY(0);
+}
+
+.login-button:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.3);
+    outline-offset: 2px;
+}
+
+
+/* ================================
+   Responsive
+================================ */
+
+@media (max-width: 520px) {
+
+    .login-container {
+        padding: 16px;
+    }
+
+    .login-card {
+        padding: 30px 24px;
+        border-radius: 16px;
+    }
+
+    .login-card h1 {
+        font-size: 28px;
+    }
+}
