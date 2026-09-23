@@ -1,11 +1,11 @@
 package com.infosys.sentinelcorebackend.service;
 
-
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,28 +13,53 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${alert.recipient.email}")
+    @Value("${alert.recipient.email:}")
     private String defaultEmailRecipient;
 
-    @Value("${twilio.account-sid}")
+    @Value("${twilio.enabled:false}")
+    private boolean twilioEnabled;
+
+    @Value("${twilio.account-sid:}")
     private String twilioAccountSid;
 
-    @Value("${twilio.auth-token}")
+    @Value("${twilio.auth-token:}")
     private String twilioAuthToken;
 
-    @Value("${twilio.from-number}")
+    @Value("${twilio.from-number:}")
     private String twilioFromNumber;
 
-    @Value("${alert.recipient.phone}")
+    @Value("${alert.recipient.phone:}")
     private String defaultPhoneRecipient;
 
     @PostConstruct
     public void initializeTwilio() {
+
+        if (!twilioEnabled) {
+            log.info("Twilio SMS notifications are disabled.");
+            return;
+        }
+
+        if (twilioAccountSid.isBlank()
+                || twilioAuthToken.isBlank()
+                || twilioFromNumber.isBlank()) {
+
+            log.warn(
+                    "Twilio is enabled but required configuration is missing. " +
+                            "SMS notifications will not be sent."
+            );
+
+            twilioEnabled = false;
+            return;
+        }
+
         Twilio.init(twilioAccountSid, twilioAuthToken);
+
+        log.info("Twilio SMS notification service initialized.");
     }
 
     public void sendAlertEmail(
@@ -43,21 +68,30 @@ public class NotificationService {
             String severity,
             String message
     ) {
+
         String recipient =
                 (toEmail == null || toEmail.isBlank())
                         ? defaultEmailRecipient
                         : toEmail;
 
+        if (recipient == null || recipient.isBlank()) {
+            log.warn("Email notification skipped: recipient email is not configured.");
+            return;
+        }
+
         SimpleMailMessage mail = new SimpleMailMessage();
 
         mail.setTo(recipient);
+
         mail.setSubject(
-                "[SentinelCore] " + severity +
-                        " Security Alert - " + assetName
+                "[SentinelCore] " +
+                        severity +
+                        " Security Alert - " +
+                        assetName
         );
 
         mail.setText(
-                "SentinelCore Security Monitoring System\n\n" +
+                "SentinelCore Cloud Security Monitoring System\n\n" +
                         "SECURITY ALERT\n\n" +
                         "Asset    : " + assetName + "\n" +
                         "Severity : " + severity + "\n" +
@@ -69,6 +103,12 @@ public class NotificationService {
         );
 
         mailSender.send(mail);
+
+        log.info(
+                "Email alert sent successfully for asset '{}' with severity '{}'.",
+                assetName,
+                severity
+        );
     }
 
     public void sendAlertSms(
@@ -77,21 +117,62 @@ public class NotificationService {
             String severity,
             String message
     ) {
+
+        if (!twilioEnabled) {
+            log.info("SMS notification skipped because Twilio is disabled.");
+            return;
+        }
+
         String recipient =
                 (phoneNumber == null || phoneNumber.isBlank())
                         ? defaultPhoneRecipient
                         : phoneNumber;
 
-        String smsBody =
-                "[SentinelCore] " + severity +
-                        " ALERT\nAsset: " + assetName +
-                        "\nDetails: " + message;
+        if (recipient == null || recipient.isBlank()) {
+            log.warn("SMS notification skipped: recipient phone is not configured.");
+            return;
+        }
 
-        Message.creator(
-                new PhoneNumber(recipient),
-                new PhoneNumber(twilioFromNumber),
-                smsBody
-        ).create();
+        if (twilioFromNumber == null || twilioFromNumber.isBlank()) {
+            log.warn("SMS notification skipped: Twilio sender number is not configured.");
+            return;
+        }
+
+        String smsBody =
+                "[SentinelCore] " +
+                        severity +
+                        " ALERT\n" +
+                        "Asset: " +
+                        assetName +
+                        "\nDetails: " +
+                        message;
+
+        try {
+
+            Message messageResponse = Message.creator(
+                    new PhoneNumber(recipient),
+                    new PhoneNumber(twilioFromNumber),
+                    smsBody
+            ).create();
+
+            log.info(
+                    "SMS alert sent successfully. Twilio message SID: {}",
+                    messageResponse.getSid()
+            );
+
+        } catch (Exception exception) {
+
+            /*
+             * SMS failure must not break the alert creation
+             * or email notification flow.
+             */
+            log.error(
+                    "Failed to send SMS notification for asset '{}'. Error: {}",
+                    assetName,
+                    exception.getMessage(),
+                    exception
+            );
+        }
     }
 
     public void sendAlertNotifications(
@@ -99,12 +180,28 @@ public class NotificationService {
             String severity,
             String message
     ) {
-        sendAlertEmail(
-                defaultEmailRecipient,
-                assetName,
-                severity,
-                message
-        );
+
+        /*
+         * Email and SMS are handled independently.
+         * A failure in one notification channel should not
+         * prevent the other channel from being processed.
+         */
+
+        try {
+            sendAlertEmail(
+                    defaultEmailRecipient,
+                    assetName,
+                    severity,
+                    message
+            );
+        } catch (Exception exception) {
+            log.error(
+                    "Failed to send email notification for asset '{}'. Error: {}",
+                    assetName,
+                    exception.getMessage(),
+                    exception
+            );
+        }
 
         sendAlertSms(
                 defaultPhoneRecipient,
