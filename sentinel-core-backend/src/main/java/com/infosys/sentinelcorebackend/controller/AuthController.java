@@ -1,10 +1,13 @@
 package com.infosys.sentinelcorebackend.controller;
 
+import com.infosys.sentinelcorebackend.dto.RegisterRequest;
 import com.infosys.sentinelcorebackend.entity.User;
 import com.infosys.sentinelcorebackend.repository.UserRepository;
 import com.infosys.sentinelcorebackend.service.AuthService;
 import com.infosys.sentinelcorebackend.util.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -70,5 +73,17 @@ public class AuthController {
         return Map.of(
                 "accessToken", jwtUtil.generateAccessToken(user.getUsername(), role)
         );
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, String> register(@Valid @RequestBody RegisterRequest request) {
+        authService.registerViewer(
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword()
+        );
+
+        return Map.of("message", "Viewer account created successfully");
     }
 }

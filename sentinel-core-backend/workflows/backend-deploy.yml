@@ -1,0 +1,63 @@
+name: SentinelCore Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "sentinel-core-backend/**"
+      - ".github/workflows/backend-deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build Spring Boot application
+        working-directory: sentinel-core-backend
+        run: ./mvnw clean package -DskipTests
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./sentinel-core-backend
+          push: true
+          tags: yashjhade19/sentinelcore-backend:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull yashjhade19/sentinelcore-backend:latest
+
+            docker stop sentinelcore-backend || true
+            docker rm sentinelcore-backend || true
+
+            docker run -d \
+              --name sentinelcore-backend \
+              --restart unless-stopped \
+              -p 8080:8080 \
+              --env-file /home/ubuntu/sentinelcore/backend.env \
+              yashjhade19/sentinelcore-backend:latest
+
+            docker ps --filter "name=sentinelcore-backend"
