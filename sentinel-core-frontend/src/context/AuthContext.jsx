@@ -37,18 +37,33 @@ export function AuthProvider({ children }) {
             setRoles([]);
         };
 
+        const handleTokenRefreshed = (event) => {
+            const newAccessToken = event.detail?.accessToken;
+            if (!newAccessToken) return;
+
+            setAccessToken(newAccessToken);
+            setRoles(readRoles(newAccessToken));
+        };
+
         window.addEventListener("auth:logout", handleLogout);
-        return () => window.removeEventListener("auth:logout", handleLogout);
+        window.addEventListener("auth:token-refreshed", handleTokenRefreshed);
+
+        return () => {
+            window.removeEventListener("auth:logout", handleLogout);
+            window.removeEventListener("auth:token-refreshed", handleTokenRefreshed);
+        };
     }, []);
 
     const loginUser = (access, refresh) => {
         localStorage.setItem("accessToken", access);
         localStorage.setItem("refreshToken", refresh);
+
         try {
             localStorage.setItem("username", jwtDecode(access).sub || "");
         } catch {
             localStorage.removeItem("username");
         }
+
         setAccessToken(access);
         setRefreshToken(refresh);
         setRoles(readRoles(access));

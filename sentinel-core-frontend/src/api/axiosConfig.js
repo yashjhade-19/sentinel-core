@@ -57,8 +57,11 @@ api.interceptors.response.use(
                             throw new Error("Refresh response did not contain an access token");
                         }
 
-                        currentAccessToken = newAccessToken;
-                        localStorage.setItem("accessToken", newAccessToken);
+                        setTokens(newAccessToken, currentRefreshToken);
+
+                        window.dispatchEvent(new CustomEvent("auth:token-refreshed", {
+                            detail: { accessToken: newAccessToken }
+                        }));
 
                         return newAccessToken;
                     })
@@ -68,6 +71,7 @@ api.interceptors.response.use(
             }
 
             const newAccessToken = await refreshPromise;
+
             originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 

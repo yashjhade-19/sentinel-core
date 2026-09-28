@@ -5,7 +5,11 @@ import "./AppLayout.css";
 const navigation = [
     { to: "/dashboard", label: "Dashboard", icon: "▦" },
     { to: "/assets", label: "Assets", icon: "◉" },
-    { to: "/alerts", label: "Alerts", icon: "△" }
+    { to: "/alerts", label: "Alerts", icon: "△" },
+    { to: "/incidents", label: "Incidents", icon: "◆" },
+    { to: "/vulnerabilities", label: "Vulnerabilities", icon: "◇" },
+    { to: "/audit", label: "Audit Logs", icon: "▤" },
+    { to: "/compliance", label: "Compliance", icon: "✓" }
 ];
 
 function AppLayout({ children }) {

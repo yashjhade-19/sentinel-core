@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { login } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { loginUser } = useAuth();
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [submitting, setSubmitting] = useState(false);
+
+    const registrationMessage = location.state?.message || "";
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -26,6 +29,7 @@ function Login() {
             console.error("Login error:", err);
             setError(
                 err.response?.data?.message ||
+                (typeof err.response?.data === "string" ? err.response.data : "") ||
                 "Invalid username or password."
             );
         } finally {
@@ -48,6 +52,10 @@ function Login() {
                     <h2>Welcome back</h2>
                     <p>Sign in to access your security operations dashboard.</p>
                 </div>
+
+                {registrationMessage && (
+                    <div className="login-success">{registrationMessage}</div>
+                )}
 
                 {error && <div className="login-error">{error}</div>}
 
@@ -82,6 +90,11 @@ function Login() {
                         {submitting ? "Signing in..." : "Sign In"}
                     </button>
                 </form>
+
+                <div className="login-register">
+                    <span>New to SentinelCore?</span>
+                    <Link to="/register">Create a viewer account</Link>
+                </div>
 
                 <p className="login-footer">Authorized access only</p>
             </div>
